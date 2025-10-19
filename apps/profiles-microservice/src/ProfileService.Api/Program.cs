@@ -1,4 +1,6 @@
 using ProfileService.Api.Messaging;
+using ProfileService.Application;
+using ProfileService.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +10,10 @@ builder.Services.AddSwaggerGen();
 
 // Register message client 
 builder.Services.AddMessageClient(builder.Configuration);
+
+// Layers
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure();
 
 var app = builder.Build();
 
