@@ -52,3 +52,51 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+# Build results
+bin/
+obj/
+out/
+
+# Visual Studio files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Package folders
+packages/
+node_modules/
+
+# Docker
+.docker/
+docker-data/
+
+# Test results and coverage
+TestResults/
+coverage/
+
+# Publish outputs
+*.publishsettings
+
+# Launch settings (user-specific)
+**/Properties/launchSettings.json
+
+# Ignore secrets
+*.secret.json
+
+# OS-specific
+Thumbs.db
+.DS_Store
