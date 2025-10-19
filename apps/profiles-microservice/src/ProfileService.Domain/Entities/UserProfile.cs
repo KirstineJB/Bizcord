@@ -13,7 +13,7 @@ public sealed class UserProfile : Entity<Guid>
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    private UserProfile() { } // required for serializers/ORM
+    private UserProfile() { } 
 
     private UserProfile(Guid id, string username, string displayName, Email email, string? bio)
     {
