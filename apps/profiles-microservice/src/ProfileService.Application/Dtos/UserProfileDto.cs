@@ -2,4 +2,4 @@
 
 namespace ProfileService.Application.Dtos;
 
-public record UserProfileDto(Guid Id, string Username, string DisplayName, string Email, string? Bio);
+public record UserProfileDto(Guid Id, string Username, string DisplayName, string Email, string? Bio, DateTimeOffset CreatedAt);

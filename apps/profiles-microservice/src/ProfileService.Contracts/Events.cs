@@ -18,6 +18,7 @@ namespace ProfileService.Contracts
         Guid ProfileId,
         string DisplayName,
         string Email,
-        DateTimeOffset UpdatedAt
+        DateTimeOffset UpdatedAt,
+        string[] ChangedFields
     );
 }

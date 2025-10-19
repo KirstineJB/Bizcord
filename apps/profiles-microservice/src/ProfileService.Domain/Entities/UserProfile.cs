@@ -33,15 +33,44 @@ public sealed class UserProfile : Entity<Guid>
     public static UserProfile Create(string username, string displayName, Email email, string? bio = null)
         => new(Guid.NewGuid(), username, displayName, email, bio);
 
-    public void Update(string displayName, Email email, string? bio)
+    public IReadOnlyList<string> Update(string displayName, Email email, string? bio)
     {
-        if (string.IsNullOrWhiteSpace(displayName)) throw new ArgumentException("Display name required.");
+        if (string.IsNullOrWhiteSpace(displayName))
+            throw new ArgumentException("Display name required.", nameof(displayName));
 
-        DisplayName = displayName.Trim();
-        Email = email;
-        Bio = string.IsNullOrWhiteSpace(bio) ? null : bio.Trim();
+        var changedFields = new List<string>();
+
+
+        if (!string.Equals(DisplayName, displayName.Trim(), StringComparison.Ordinal))
+        {
+            DisplayName = displayName.Trim();
+            changedFields.Add(nameof(DisplayName));
+        }
+
+
+        if (!Email.Equals(email))
+        {
+            Email = email;
+            changedFields.Add(nameof(Email));
+        }
+
+
+        var newBio = string.IsNullOrWhiteSpace(bio) ? null : bio.Trim();
+        if (!string.Equals(Bio, newBio, StringComparison.Ordinal))
+        {
+            Bio = newBio;
+            changedFields.Add(nameof(Bio));
+        }
+
+
         UpdatedAt = DateTimeOffset.UtcNow;
 
-        Raise(new ProfileUpdated(Id, DisplayName, Email.Value));
+     
+        if (changedFields.Count > 0)
+        {
+            Raise(new ProfileUpdated(Id, DisplayName, Email.Value));
+        }
+
+        return changedFields;
     }
 }

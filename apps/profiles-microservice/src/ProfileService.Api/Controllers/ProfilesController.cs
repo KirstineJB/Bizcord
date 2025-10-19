@@ -3,6 +3,8 @@ using ProfileService.Api.Messaging;
 using ProfileService.Api.Requests;
 using ProfileService.Application.Contracts;
 using ProfileService.Contracts;
+using ProfileService.Domain.Events;
+using System.ComponentModel.DataAnnotations;
 
 
 namespace ProfileService.Api.Controllers;
@@ -30,7 +32,7 @@ public class ProfilesController : ControllerBase
 
 
             await _bus.PublishAsync(
-                new ProfileCreated(created.Id, created.Username, created.DisplayName, created.Email, DateTimeOffset.UtcNow),
+                new Contracts.ProfileCreated(created.Id, created.Username, created.DisplayName, created.Email, DateTimeOffset.UtcNow),
                 topic: "profiles.created",
                 ct: ct);
 
@@ -67,22 +69,47 @@ public class ProfilesController : ControllerBase
         return Ok(shared);
     }
 
- 
+
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateProfileRequest req, CancellationToken ct)
     {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
         try
         {
-            var ok = await _service.UpdateAsync(id, req.DisplayName, req.Email, req.Bio, ct);
-            if (!ok) return NotFound();
+            var (found, updated, changed) =
+                await _service.UpdateAsync(id, req.DisplayName, req.Email, req.Bio,  ct);
 
-      
-            await _bus.PublishAsync(
-                new ProfileUpdated(id, req.DisplayName, req.Email, DateTimeOffset.UtcNow),
-                topic: "profiles.updated",
-                ct: ct);
+            if (!found) return NotFound();
 
-            return NoContent();
+            // Publish integration event only when something actually changed
+            if (changed.Count > 0 && updated is not null)
+            {
+                await _bus.PublishAsync(
+                    new Contracts.ProfileUpdated(
+                        updated.Id,
+                        updated.DisplayName,
+                        updated.Email,
+                        DateTimeOffset.UtcNow,
+                        changed.ToArray()),
+                    topic: "profiles.updated",
+                    ct: ct);
+            }
+
+          
+            var shared = new ProfileSharedDto(
+                updated!.Id,
+                updated.Username,
+                updated.DisplayName,
+                updated.Email,
+                updated.CreatedAt);
+
+            return Ok(shared);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
         catch (ArgumentException ex)
         {
