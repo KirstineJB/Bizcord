@@ -107,3 +107,17 @@
   * Integrations test til at teste API’et opdaterer in-memory repository’et og publicerer et ProfileUpdated event korrekt.
 * Eventet sker kun når der rent faktisk er en ændring. Ikke hvis noget opdaterer uden at ændrer noget.
 
+6. Kør med docker:
+
+  1. Byg og start containere:
+    * docker compose up -d --build
+  2. Tjek at alt er oppe:
+    * docker compose ps
+    Du bør se både profiles-api og rabbitmq som running / healthy.
+  3. Åbn API’en i browseren:
+    Gå til: http://localhost:8080/swagger
+    Her kan du se og teste alle endpoints direkte via Swagger UI.
+  4. Stop containere igen:
+    * docker compose down
+
+
