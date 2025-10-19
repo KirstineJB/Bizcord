@@ -10,9 +10,11 @@ public interface IUserProfileService
     Task<UserProfileDto> CreateAsync(string username, string displayName, string email, string? bio, CancellationToken ct);
     Task<UserProfileDto?> GetAsync(Guid id, CancellationToken ct);
     Task<IReadOnlyList<UserProfileDto>> ListAsync(int skip, int take, CancellationToken ct);
-    Task<bool> UpdateAsync(Guid id, string displayName, string email, string? bio, CancellationToken ct);
 
     Task<bool> DeleteAsync(Guid id, CancellationToken ct);
+
+    Task<(bool Found, UserProfileDto? Updated, IReadOnlyList<string> Changed)> UpdateAsync(
+     Guid id, string displayName, string email, string? bio,CancellationToken ct);
 }
 
 public class UserProfileService : IUserProfileService
@@ -27,7 +29,7 @@ public class UserProfileService : IUserProfileService
 
         var p = UserProfile.Create(username, displayName, Email.Create(email), bio);
         await _repo.AddAsync(p, ct);
-        return new UserProfileDto(p.Id, p.Username, p.DisplayName, p.Email.Value, p.Bio);
+        return new UserProfileDto(p.Id, p.Username, p.DisplayName, p.Email.Value, p.Bio, p.CreatedAt);
     }
     public async Task<bool> DeleteAsync(Guid id, CancellationToken ct)
     {
@@ -36,21 +38,26 @@ public class UserProfileService : IUserProfileService
     public async Task<UserProfileDto?> GetAsync(Guid id, CancellationToken ct)
     {
         var p = await _repo.GetByIdAsync(id, ct);
-        return p is null ? null : new UserProfileDto(p.Id, p.Username, p.DisplayName, p.Email.Value, p.Bio);
+        return p is null ? null : new UserProfileDto(p.Id, p.Username, p.DisplayName, p.Email.Value, p.Bio, p.CreatedAt);
     }
 
     public async Task<IReadOnlyList<UserProfileDto>> ListAsync(int skip, int take, CancellationToken ct)
     {
         var list = await _repo.ListAsync(skip, take, ct);
-        return list.Select(p => new UserProfileDto(p.Id, p.Username, p.DisplayName, p.Email.Value, p.Bio)).ToList();
+        return list.Select(p => new UserProfileDto(p.Id, p.Username, p.DisplayName, p.Email.Value, p.Bio, p.CreatedAt)).ToList();
     }
 
-    public async Task<bool> UpdateAsync(Guid id, string displayName, string email, string? bio, CancellationToken ct)
+
+    public async Task<(bool Found, UserProfileDto? Updated, IReadOnlyList<string> Changed)> UpdateAsync(
+    Guid id, string displayName, string email, string? bio,  CancellationToken ct)
     {
         var p = await _repo.GetByIdAsync(id, ct);
-        if (p is null) return false;
-        p.Update(displayName, Email.Create(email), bio);
+        if (p is null) return (false, null, Array.Empty<string>());
+
+        var changed = p.Update(displayName, Email.Create(email), bio);
         await _repo.UpdateAsync(p, ct);
-        return true;
+
+        var dto = new UserProfileDto(p.Id, p.Username, p.DisplayName, p.Email.Value, p.Bio, p.CreatedAt);
+        return (true, dto, changed);
     }
 }
