@@ -30,4 +30,14 @@ public sealed class InMemoryUserProfileRepository : IUserProfileRepository
         _byUsername[profile.Username] = profile.Id;
         return Task.CompletedTask;
     }
+
+    public Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        if (!_byId.TryGetValue(id, out var profile))
+            return Task.FromResult(false);
+
+        _byId.Remove(id);
+        _byUsername.Remove(profile.Username);
+        return Task.FromResult(true);
+    }
 }

@@ -9,4 +9,5 @@ public interface IUserProfileRepository
     Task<IReadOnlyList<UserProfile>> ListAsync(int skip = 0, int take = 50, CancellationToken ct = default);
     Task AddAsync(UserProfile profile, CancellationToken ct = default);
     Task UpdateAsync(UserProfile profile, CancellationToken ct = default);
+    Task<bool> DeleteAsync(Guid id, CancellationToken ct = default);
 }

@@ -11,6 +11,8 @@ public interface IUserProfileService
     Task<UserProfileDto?> GetAsync(Guid id, CancellationToken ct);
     Task<IReadOnlyList<UserProfileDto>> ListAsync(int skip, int take, CancellationToken ct);
     Task<bool> UpdateAsync(Guid id, string displayName, string email, string? bio, CancellationToken ct);
+
+    Task<bool> DeleteAsync(Guid id, CancellationToken ct);
 }
 
 public class UserProfileService : IUserProfileService
@@ -27,7 +29,10 @@ public class UserProfileService : IUserProfileService
         await _repo.AddAsync(p, ct);
         return new UserProfileDto(p.Id, p.Username, p.DisplayName, p.Email.Value, p.Bio);
     }
-
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken ct)
+    {
+        return await _repo.DeleteAsync(id, ct);
+    }
     public async Task<UserProfileDto?> GetAsync(Guid id, CancellationToken ct)
     {
         var p = await _repo.GetByIdAsync(id, ct);
