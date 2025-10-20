@@ -8,6 +8,11 @@
   Docker / Docker Compose
   Clean Architecture (DDD-lite principper)
 
+  Brugte hjælpemidler:
+  * Stack overflow
+  * ChatGPT, Github Copilot
+  * Eksempler fra undervisningen
+
 1. Projekt Struktur:
   Lagdelt design inspireret af Domain-Driven Design (DDD):
   apps/
@@ -92,8 +97,13 @@
   * Isolering: API’et, broker og tests kører i separate containere uden lokale konflikter.
   * Sikkerhed & effektivitet: Multi-stage build reducerer image-størrelse og fjerner build-værktøjer fra runtime.
   * Portabilitet: Kan nemt køre lokalt, i CI/CD pipelines eller i cloud-miljøer uden ændringer.
+  
+5. Data persistence
 
-5. Update profile:
+  * Lige nu bruger projektet kun brug af in-memory repository til at gemme brugerprofiler. Det er for at gøre udviklingen hurtig og mere enkel. Imen serciven kører gemmes data i de to Dictonaries: _byId, _byUsername
+  i klassen: InMemoryUserProfileRepository. Der er oprettet et interface så man forholdsvis nemt bør kunne skife til en database-understøttet implementering (EF eller PostgreSQL) uden at skulle ændre business logic eller controllers. 
+
+6. Update profile:
     Jeg havde allerede lavet en simpel update, men som den første 'feature' refaktorerede jeg den efter den givet userstory.
   Hvad blev gjort:
   * I Domain-laget blev metoden UserProfile.Update tilføjet.
@@ -107,17 +117,18 @@
   * Integrations test til at teste API’et opdaterer in-memory repository’et og publicerer et ProfileUpdated event korrekt.
 * Eventet sker kun når der rent faktisk er en ændring. Ikke hvis noget opdaterer uden at ændrer noget.
 
-6. Kør med docker:
+7. Kør med docker:
 
-  1. Byg og start containere:
+  - Byg og start containere:
     * docker compose up -d --build
-  2. Tjek at alt er oppe:
+  - Tjek at alt er oppe:
     * docker compose ps
     Du bør se både profiles-api og rabbitmq som running / healthy.
-  3. Åbn API’en i browseren:
+  - Åbn API’en i browseren:
     Gå til: http://localhost:8080/swagger
     Her kan du se og teste alle endpoints direkte via Swagger UI.
-  4. Stop containere igen:
+  - Stop containere igen:
     * docker compose down
+
 
 
