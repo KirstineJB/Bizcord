@@ -7,9 +7,8 @@ using ProfileService.Api.Requests;
 using ProfileService.Application.Contracts;
 using ProfileService.Application.Dtos;
 using ProfileService.Contracts;
-using ProfileService.Domain.Events;
 using System.ComponentModel.DataAnnotations;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Rebus.Bus;
 
 
 namespace ProfileService.Api.Controllers;
@@ -20,7 +19,7 @@ public class ProfilesController : ControllerBase
 {
     private readonly IUserProfileService _service;
     private readonly IMessageClient _bus;
-
+    private readonly IBus _rebusBus;
 
     // Prøver 3 gange
     private static readonly AsyncRetryPolicy<IReadOnlyList<UserProfileDto>> RetryPolicy =
@@ -46,10 +45,22 @@ public class ProfilesController : ControllerBase
     private static readonly IAsyncPolicy<IReadOnlyList<UserProfileDto>> ResiliencyPolicy =
         Policy.WrapAsync(FallbackPolicy, RetryPolicy);
 
-    public ProfilesController(IUserProfileService service, IMessageClient bus)
+    public ProfilesController(IUserProfileService service, IMessageClient bus, IBus rebusBus)
     {
         _service = service;
         _bus = bus;
+        _rebusBus = rebusBus;
+    }
+
+    [HttpPost("{id:guid}/upgrade-to-premium")]
+    public async Task<IActionResult> UpgradeToPremium([FromRoute] Guid id, CancellationToken ct)
+    {
+
+
+
+        await _rebusBus.Send(new UpgradeUserToPremium(id));
+
+        return Accepted(new { Message = "Upgrade to premium  start", UserId = id });
     }
 
 
@@ -101,7 +112,7 @@ public class ProfilesController : ControllerBase
         if (role != "Service")
         {
 
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden);
         }
 
         Console.WriteLine($"Internal call from service: {serviceId ?? "<unknown>"}");
@@ -122,7 +133,7 @@ public class ProfilesController : ControllerBase
     
         if (role != "Admin")
         {
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden);
         }
 
         var list = await ResiliencyPolicy.ExecuteAsync(
