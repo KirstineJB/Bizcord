@@ -22,30 +22,6 @@
         "X-UserId": "Claims[sub] > value",
         "X-UserRole": "Claims[role] > value"
       }
-    },
-    {
-      //  Internal / east–west
-      "DownstreamPathTemplate": "/api/v1/Profiles/internal/{everything}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7206
-        }
-      ],
-      "UpstreamPathTemplate": "/internal/profiles/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST" ],
-      "Key": "profiles-internal",
-
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": [ "profiles.internal" ] 
-      },
-
-      "AddHeadersToRequest": {
-        "X-ServiceId": "Claims[sub] > value",
-        "X-UserRole": "Claims[role] > value"
-      }
     }
   ],
   "GlobalConfiguration": {

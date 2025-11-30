@@ -1,22 +1,6 @@
 using ProfileService.Api.Messaging;
-using ProfileService.Api.vault;
 using ProfileService.Application;
 using ProfileService.Infrastructure;
-
-// --- Vault ---
-var vaultSettings = new VaultSettings
-{
-    Address = "http://localhost:8200",
-    Token = Environment.GetEnvironmentVariable("VAULT_DEV_TOKEN")
-            ?? "hvs.tsDlwsO5KMzsIVqxd1bUtWaw"
-};
-
-var vault = new VaultHelper(vaultSettings);
-
-var messagingConnectionString = vault.GetRabbitMqConnectionStringAsync()
-    .GetAwaiter()
-    .GetResult();
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,12 +8,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
-builder.Configuration["Messaging:ConnectionString"] = messagingConnectionString;
-
-
+// Register message client 
 builder.Services.AddMessageClient(builder.Configuration);
 
+// Layers
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
