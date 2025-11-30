@@ -8,7 +8,7 @@ var vaultSettings = new VaultSettings
 {
     Address = "http://localhost:8200",
     Token = Environment.GetEnvironmentVariable("VAULT_DEV_TOKEN")
-            ?? "xxx" //Secret token
+            ?? throw new InvalidOperationException("VAULT_DEV_TOKEN not set")
 };
 
 var vault = new VaultHelper(vaultSettings);
