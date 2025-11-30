@@ -64,6 +64,16 @@ public class ProfilesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProfileSharedDto>>> List([FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken ct = default)
     {
+        var userId = HttpContext.Request.Headers["X-UserId"].FirstOrDefault();
+        var role = HttpContext.Request.Headers["X-UserRole"].FirstOrDefault();
+
+    
+        if (role != "Admin")
+        {
+       
+            return Forbid();
+        }
+
         var list = await _service.ListAsync(skip, Math.Clamp(take, 1, 100), ct);
         var shared = list.Select(p => new ProfileSharedDto(p.Id, p.Username, p.DisplayName, p.Email, DateTimeOffset.UtcNow));
         return Ok(shared);
