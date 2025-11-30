@@ -11,7 +11,17 @@
       ],
       "UpstreamPathTemplate": "/profiles/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
-      "Key": "profiles-all"
+      "Key": "profiles-all",
+
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": [ "profiles.read", "profiles.write" ]
+      },
+
+      "AddHeadersToRequest": {
+        "X-UserId": "Claims[sub] > value",
+        "X-UserRole": "Claims[role] > value"
+      }
     }
   ],
   "GlobalConfiguration": {
