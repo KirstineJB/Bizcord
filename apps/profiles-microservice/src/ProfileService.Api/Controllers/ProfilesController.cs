@@ -1,10 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Polly;
+using Polly.Fallback;
+using Polly.Retry;
 using ProfileService.Api.Messaging;
 using ProfileService.Api.Requests;
 using ProfileService.Application.Contracts;
+using ProfileService.Application.Dtos;
 using ProfileService.Contracts;
 using ProfileService.Domain.Events;
 using System.ComponentModel.DataAnnotations;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace ProfileService.Api.Controllers;
@@ -15,6 +20,31 @@ public class ProfilesController : ControllerBase
 {
     private readonly IUserProfileService _service;
     private readonly IMessageClient _bus;
+
+
+    // Prøver 3 gange
+    private static readonly AsyncRetryPolicy<IReadOnlyList<UserProfileDto>> RetryPolicy =
+        Policy<IReadOnlyList<UserProfileDto>>
+            .Handle<Exception>()
+            .WaitAndRetryAsync(
+                retryCount: 3,
+                sleepDurationProvider: attempt => TimeSpan.FromMilliseconds(200 * attempt)
+            );
+
+    // Fallback: Hvis retry fejler 3 gange returneres end tom liste
+    private static readonly AsyncFallbackPolicy<IReadOnlyList<UserProfileDto>> FallbackPolicy =
+        Policy<IReadOnlyList<UserProfileDto>>
+            .Handle<Exception>()
+            .FallbackAsync(
+                fallbackAction: ct =>
+                {
+                    return Task.FromResult<IReadOnlyList<UserProfileDto>>(Array.Empty<UserProfileDto>());
+                }
+            );
+
+    // kombineret resiliency policy
+    private static readonly IAsyncPolicy<IReadOnlyList<UserProfileDto>> ResiliencyPolicy =
+        Policy.WrapAsync(FallbackPolicy, RetryPolicy);
 
     public ProfilesController(IUserProfileService service, IMessageClient bus)
     {
@@ -66,15 +96,15 @@ public class ProfilesController : ControllerBase
     {
         var userId = HttpContext.Request.Headers["X-UserId"].FirstOrDefault();
         var role = HttpContext.Request.Headers["X-UserRole"].FirstOrDefault();
-
     
         if (role != "Admin")
         {
-       
             return Forbid();
         }
 
-        var list = await _service.ListAsync(skip, Math.Clamp(take, 1, 100), ct);
+        var list = await ResiliencyPolicy.ExecuteAsync(
+                () => _service.ListAsync(skip, Math.Clamp(take, 1, 100), ct)
+            );
         var shared = list.Select(p => new ProfileSharedDto(p.Id, p.Username, p.DisplayName, p.Email, DateTimeOffset.UtcNow));
         return Ok(shared);
     }
