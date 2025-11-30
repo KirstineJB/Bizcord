@@ -14,14 +14,22 @@ var secretKey = "SuperDuperMegaHemmeligTestNøgle";
 var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-var claims = new[]
-{
-    new Claim("sub", "user-123"),        
-    new Claim("name", "Test User"),
-    new Claim("role", "Admin"),
-    new Claim("scope", "profiles.read")
+//var claims = new[]
+//{
+//    new Claim("sub", "user-123"),        
+//    new Claim("name", "Test User"),
+//    new Claim("role", "Admin"),
+//    new Claim("scope", "profiles.read")
 
-};
+//};
+
+var claims = new[]
+       {
+            new Claim("sub", "channel-service"),     
+            new Claim("role", "Service"),            
+            new Claim("scope", "profiles.internal")   
+        };
+
 
 var token = new JwtSecurityToken(
     issuer: issuer,
