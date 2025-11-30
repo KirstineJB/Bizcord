@@ -90,6 +90,29 @@ public class ProfilesController : ControllerBase
         return Ok(shared);
     }
 
+    //Simulates et endpoint kun internal services may call
+    [HttpGet("internal/all")]
+    public async Task<ActionResult<IEnumerable<ProfileSharedDto>>> GetAllInternal(
+    [FromHeader(Name = "X-UserRole")] string? role,
+    [FromHeader(Name = "X-ServiceId")] string? serviceId,
+    CancellationToken ct = default)
+    {
+        // Check the role is service or else no go
+        if (role != "Service")
+        {
+
+            return Forbid();
+        }
+
+        Console.WriteLine($"Internal call from service: {serviceId ?? "<unknown>"}");
+
+        var list = await _service.ListAsync(0, 100, ct);
+        var shared = list.Select(p =>
+            new ProfileSharedDto(p.Id, p.Username, p.DisplayName, p.Email, DateTimeOffset.UtcNow));
+
+        return Ok(shared);
+    }
+
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProfileSharedDto>>> List([FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken ct = default)
